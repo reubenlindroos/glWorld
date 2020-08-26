@@ -3,6 +3,10 @@
 #include <iostream>
 #include <string>
 
+//macros
+//#define DRAW_RECTANGLE //draws rectangle rather than triangle using EBOs rather than VBOs
+//#define DRAW_WIREFRAME // draws empty polygons rather than full triangles
+
 //Shaders
 //1.vertex shader
 const char* vertexShaderSource = "#version 330 core\n"
@@ -67,12 +71,25 @@ int main()
 	glViewport(0, 0, 800, 600);
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback); //window resizing
 
+#ifdef DRAW_RECTANGLE
+	float vertices[] = {
+		0.5f, 0.5f, 0.0f, // top right
+		0.5f, -0.5f, 0.0f, // bottom right
+		-0.5f, -0.5f, 0.0f, // bottom left
+		-0.5f, 0.5f, 0.0f // top left
+	};
+	unsigned int indices[] = { // note that we start from 0!
+		0, 1, 3, // first triangle
+		1, 2, 3 // second triangle
+	};
+#else
 	//Vertices. These are what describe the object in 3d space. 
 	float vertices[] = {
 			-0.5f, -0.5f, 0.0f,
 			0.5f, -0.5f, 0.0f,
 			0.0f, 0.5f, 0.0f
 	};
+#endif // DRAW_RECTANGLE/TRIANGLE
 
 	//compile shaders 
 	unsigned int vertexShader;
@@ -115,13 +132,25 @@ int main()
 	unsigned int VBO; 
 	glGenBuffers(1, &VBO); //generate the buffer
 	glBindBuffer(GL_ARRAY_BUFFER, VBO); //bind the newly created buffer object to the GL_ARRAY_BUFFER target
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //copy the data into the buffer's memory
+	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //copy the VERTEX data into the buffer's memory
+	// NOTE: this step is always neeeded, even when using EBOs
+
+#ifdef DRAW_RECTANGLE
+
+	unsigned int EBO;
+	glGenBuffers(1, &EBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
+		GL_STATIC_DRAW);
+#endif
 
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
 		(void*)0);
 	glEnableVertexAttribArray(0);
-
-	
+#ifdef DRAW_WIREFRAME
+	glPolygonMode(GL_FRONT_AND_BACK,
+		GL_LINE);
+#endif
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -138,8 +167,12 @@ int main()
 		//bind the vertex array object (need to do this every render cycle)
 		glBindVertexArray(VAO);
 		//draw 
+#ifdef DRAW_RECTANGLE
+		
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+#else
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-
+#endif
 		// check and call events and swap the buffers
 		glfwPollEvents();
 		glfwSwapBuffers(window);

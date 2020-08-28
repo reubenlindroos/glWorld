@@ -84,11 +84,17 @@ int main()
 	};
 #else
 	//Vertices. These are what describe the object in 3d space. 
-	float vertices[] = {
-			-0.5f, -0.5f, 0.0f,
-			0.5f, -0.5f, 0.0f,
-			0.0f, 0.5f, 0.0f
+	float firstTriangle[] = {
+		-0.9f, -0.5f, 0.0f,  // left 
+		-0.0f, -0.5f, 0.0f,  // right
+		-0.45f, 0.5f, 0.0f,  // top 
 	};
+	float secondTriangle[] = {
+		0.0f, -0.5f, 0.0f,  // left
+		0.9f, -0.5f, 0.0f,  // right
+		0.45f, 0.5f, 0.0f   // top 
+	};
+	
 #endif // DRAW_RECTANGLE/TRIANGLE
 
 	//compile shaders 
@@ -124,17 +130,27 @@ int main()
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
-	//creating GL Objects
-	unsigned int VAO; //object that groups all the VBOs
-	glGenVertexArrays(1, &VAO);
-	glBindVertexArray(VAO); //needs to be bound BEFORE the VBO is loaded, just like the VBO itself
-
-	unsigned int VBO; 
-	glGenBuffers(1, &VBO); //generate the buffer
-	glBindBuffer(GL_ARRAY_BUFFER, VBO); //bind the newly created buffer object to the GL_ARRAY_BUFFER target
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //copy the VERTEX data into the buffer's memory
-	// NOTE: this step is always neeeded, even when using EBOs
-
+	// set up vertex data (and buffer(s)) and configure vertex attributes
+   // ------------------------------------------------------------------
+	
+	unsigned int VBOs[2], VAOs[2];
+	glGenVertexArrays(2, VAOs); // we can also generate multiple VAOs or buffers at the same time
+	glGenBuffers(2, VBOs);
+	// first triangle setup
+	// --------------------
+	glBindVertexArray(VAOs[0]);
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(firstTriangle), firstTriangle, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);	// Vertex attributes stay the same
+	glEnableVertexAttribArray(0);
+	// glBindVertexArray(0); // no need to unbind at all as we directly bind a different VAO the next few lines
+	// second triangle setup
+	// ---------------------
+	glBindVertexArray(VAOs[1]);	// note that we bind to a different VAO now
+	glBindBuffer(GL_ARRAY_BUFFER, VBOs[1]);	// and a different VBO
+	glBufferData(GL_ARRAY_BUFFER, sizeof(secondTriangle), secondTriangle, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0); // because the vertex data is tightly packed we can also specify 0 as the vertex attribute's stride to let OpenGL figure it out
+	glEnableVertexAttribArray(0);
 #ifdef DRAW_RECTANGLE
 
 	unsigned int EBO;
@@ -165,14 +181,13 @@ int main()
 		//make gl use this program
 		glUseProgram(shaderProgram);
 		//bind the vertex array object (need to do this every render cycle)
-		glBindVertexArray(VAO);
-		//draw 
-#ifdef DRAW_RECTANGLE
-		
-		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-#else
+		glBindVertexArray(VAOs[0]);
 		glDrawArrays(GL_TRIANGLES, 0, 3);
-#endif
+		
+		glBindVertexArray(VAOs[1]);
+		glDrawArrays(GL_TRIANGLES, 0, 3);
+
+		
 		// check and call events and swap the buffers
 		glfwPollEvents();
 		glfwSwapBuffers(window);

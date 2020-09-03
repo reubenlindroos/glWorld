@@ -4,7 +4,9 @@
 #include <string>
 //internal
 #include "Shader.h"
-
+#include "filesystem.hpp"
+#include "IOTools.h"
+namespace fs = ghc::filesystem;
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -47,8 +49,9 @@ int main()
 		0.5f, -0.5f, 0.0f,
 		0.0f, 0.5f, 0.0f
 	};
-
-	Shader * shaderProgram = new Shader("vertexShader.glsl", "fragmentShader.glsl");
+	std::string vShaderPath = fs::path(io::getProjectSrcDir()) / fs::path("src/part2/vertexShader.glsl");
+	std::string fShaderPath = fs::path(io::getProjectSrcDir()) / fs::path("src/part2/fragmentShader.glsl");
+	Shader * shaderProgram = new Shader(vShaderPath.c_str(), fShaderPath.c_str());
 
 	//creating GL Objects
 	unsigned int VAO; //object that groups all the VBOs

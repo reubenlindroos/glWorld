@@ -4,7 +4,7 @@
 #include <string>
 
 //macros
-//#define DRAW_RECTANGLE //draws rectangle rather than triangle using EBOs rather than VBOs
+#define DRAW_RECTANGLE //draws rectangle rather than triangle using EBOs rather than VBOs
 //#define DRAW_WIREFRAME // draws empty polygons rather than full triangles
 
 //Shaders

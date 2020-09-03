@@ -5,6 +5,7 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include "filesystem.hpp"
 
 /**
  * Encapsulates the shader program setup and checks for bugs on compiling.
